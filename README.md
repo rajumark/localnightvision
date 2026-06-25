@@ -1,98 +1,82 @@
 # Local Night Vision
 
-**On-device low-light image enhancement using MIRNet — powered by Kotlin Multiplatform + Compose Multiplatform.**
+**On-device low-light image enhancement using MIRNet — Kotlin Multiplatform + Compose Multiplatform.**
 
-| Android | iOS (WIP) |
-|---------|-----------|
-| ✅ CameraX preview + capture | ⚠️ AVFoundation scaffold |
-| ✅ Gallery image picker | ⚠️ UIImagePicker scaffold |
-| ✅ TFLite GPU inference | ⚠️ TFLite C interop scaffold |
-| ✅ Touch-to-compare gesture | ⚠️ Gesture handling scaffold |
+| Platform | Camera | Picker | ML Inference | Touch-to-Compare |
+|----------|--------|--------|-------------|-----------------|
+| Android  | ✅ CameraX | ✅ GetContent | ✅ TFLite GPU | ✅ GestureDetector |
+| iOS      | ⚠️ scaffold | ⚠️ scaffold | ⚠️ scaffold | ⚠️ scaffold |
 
 ---
 
 ## Research Paper
 
-This project implements the **MIRNet** architecture described in:
-
-> **"MIRNet: Learning Enriched Features for Real Image Restoration and Enhancement"**  
-> *Syed Waqas Zamir, Aditya Arora, Salman Khan, Munawar Hayat, Fahad Shahbaz Khan, Ming-Hsuan Yang, Ling Shao*  
-> **arXiv:2003.06792v2**
->
-> [Read the paper](https://arxiv.org/pdf/2003.06792v2.pdf)
+> **MIRNet: Learning Enriched Features for Real Image Restoration and Enhancement**  
+> *Zamir et al., arXiv:2003.06792v2*  
+> [arxiv.org/pdf/2003.06792v2.pdf](https://arxiv.org/pdf/2003.06792v2.pdf)
 
 ---
 
-## Features
-
-- **Live camera preview** with real-time viewfinder
-- **Capture button** to take a photo and auto-enhance
-- **Gallery picker** to select existing photos for enhancement
-- **On-device processing** via TensorFlow Lite — zero network calls
-- **GPU acceleration** via OpenGL/OpenCL (Android) and Metal (iOS)
-- **Touch-to-compare** — hold finger on enhanced image to see original, release to compare
-- **~800ms inference** on modern devices (MIRNet 400×400 fixed input)
-
----
-
-## Architecture
+## Project Structure
 
 ```
 localnightvision/
-├── composeApp/                          # Shared Compose UI + platform entry points
+├── composeApp/                              ## ── Shared KMP module ──
 │   └── src/
-│       ├── commonMain/kotlin/com/localnightimage/
-│       │   ├── App.kt                   # Root composable, permission → camera → result
-│       │   ├── CameraScreen.kt          # Camera preview + capture + picker UI
-│       │   ├── CameraPreview.kt         # expect/actual platform camera view
-│       │   ├── PermissionScreen.kt      # Runtime permission request UI
-│       │   ├── ResultScreen.kt          # Enhanced image + touch-to-compare
-│       │   ├── model/
-│       │   │   ├── ImageState.kt        # ImageBundle, CaptureMode
-│       │   │   └── MlConfig.kt          # Model dimensions, file path
-│       │   ├── platform/
-│       │   │   ├── ImageProcessor.kt    # expect ML inference interface
-│       │   │   ├── ImagePicker.kt       # expect gallery picker interface
-│       │   │   └── PermissionManager.kt # expect camera permission interface
-│       │   └── ui/theme/
-│       │       └── Theme.kt             # Material3 dark/light theme
-│       ├── androidMain/kotlin/com/localnightimage/
-│       │   ├── MainActivity.kt          # Android Activity entry point
-│       │   ├── CameraPreview.android.kt # CameraX PreviewView + ImageCapture
-│       │   ├── ImageBitmapUtil.android.kt # ByteArray → ImageBitmap
-│       │   └── platform/
-│       │       ├── ImageProcessor.android.kt  # TFLite Interpreter + GPU delegate
-│       │       ├── ImagePicker.android.kt     # ActivityResultContracts.GetContent
-│       │       └── PermissionManager.android.kt # RequestPermission launcher
-│       ├── androidMain/assets/model/
-│       │   └── lite-model_mirnet-fixed_integer_1.tflite  # MIRNet quantized model
-│       ├── androidMain/AndroidManifest.xml
-│       └── iosMain/kotlin/com/localnightimage/
-│           ├── MainViewController.kt    # iOS UIKit entry point
-│           ├── CameraPreview.ios.kt     # AVFoundation scaffold
-│           ├── ImageBitmapUtil.ios.kt   # Skia ByteArray → ImageBitmap
-│           └── platform/
-│               ├── ImageProcessor.ios.kt   # TFLite C API scaffold
-│               ├── ImagePicker.ios.kt      # UIImagePicker scaffold
-│               └── PermissionManager.ios.kt # AVFoundation auto-prompt
+│       ├── commonMain/                      ##  Cross-platform code  │
+│       │   └── kotlin/com/localnightimage/                          │
+│       │       ├── App.kt                   #  Root: perm → cam → result
+│       │       ├── CameraScreen.kt          #  Camera UI + controls
+│       │       ├── CameraPreview.kt         #  expect camera composable
+│       │       ├── PermissionScreen.kt      #  Permission request UI
+│       │       ├── ResultScreen.kt          #  Enhanced + touch-to-compare
+│       │       ├── model/
+│       │       │   ├── ImageState.kt        #  image bundles & states
+│       │       │   └── MlConfig.kt          #  model params (400×400)
+│       │       ├── platform/
+│       │       │   ├── ImageProcessor.kt    #  expect ML interface
+│       │       │   ├── ImagePicker.kt       #  expect gallery picker
+│       │       │   └── PermissionManager.kt #  expect permission API
+│       │       └── ui/theme/
+│       │           └── Theme.kt             #  Material3 dark theme
+│       │                                                          │
+│       ├── androidMain/                     ##  Android actuals  ──┤
+│       │   ├── kotlin/com/localnightimage/                        │
+│       │   │   ├── MainActivity.kt          #  Activity entry
+│       │   │   ├── CameraPreview.android.kt #  CameraX PreviewView
+│       │   │   ├── ImageBitmapUtil.android.kt#  ByteArray→Bitmap
+│       │   │   └── platform/
+│       │   │       ├── ImageProcessor.android.kt  # TFLite Interpreter
+│       │   │       ├── ImagePicker.android.kt     # GetContent
+│       │   │       └── PermissionManager.android.kt # RequestPermission
+│       │   ├── assets/model/
+│       │   │   └── lite-model_mirnet-fixed_integer_1.tflite  # MIRNet (~39MB)
+│       │   └── res/                         #  Android resources
+│       │                                                          │
+│       └── iosMain/                         ##  iOS actuals  ────┤
+│           └── kotlin/com/localnightimage/                       │
+│               ├── MainViewController.kt    #  UIKit entry
+│               ├── CameraPreview.ios.kt     #  AVFoundation scaffold
+│               ├── ImageBitmapUtil.ios.kt   #  Skia ByteArray→Bitmap
+│               └── platform/
+│                   ├── ImageProcessor.ios.kt    # TFLite C API scaffold
+│                   ├── ImagePicker.ios.kt       # UIImagePicker scaffold
+│                   └── PermissionManager.ios.kt # auto-prompt scaffold
 │
-├── iosApp/                              # iOS Xcode project wrapper
+├── iosApp/                                  ## ── iOS app wrapper ──
 │   ├── iosApp/
-│   │   ├── iOSApp.swift                 # SwiftUI App entry point
-│   │   ├── ContentView.swift            # UIViewControllerRepresentable bridge
+│   │   ├── iOSApp.swift                    #  SwiftUI App
+│   │   ├── ContentView.swift               #  Compose↔SwiftUI bridge
 │   │   └── Info.plist
-│   └── iosApp.xcodeproj/                # Auto-generated Xcode project
-│
-├── docs/
-│   └── index.html                       # Project documentation page
+│   └── iosApp.xcodeproj/
 │
 ├── gradle/
-│   ├── libs.versions.toml               # Version catalog
-│   └── wrapper/
-├── build.gradle.kts                     # Root build file
-├── settings.gradle.kts                  # Module declarations
-├── gradle.properties                    # KMP & Android config
-└── local.properties                     # Android SDK path (local)
+│   └── libs.versions.toml                  #  dependency catalog
+├── build.gradle.kts                        #  root build
+├── settings.gradle.kts                     #  module setup
+├── gradle.properties                       #  KMP + Android flags
+└── docs/
+    └── index.html                          #  project page
 ```
 
 ---
@@ -100,120 +84,145 @@ localnightvision/
 ## Data Flow
 
 ```
- User taps capture/picks image
-         │
-         ▼
-┌─────────────────────┐
-│  Camera / Gallery   │  ← Platform-specific (CameraX / UIImagePicker)
-│  captures image     │
-└─────────┬───────────┘
-          │ ByteArray
-          ▼
-┌─────────────────────┐
-│  ImageProcessor     │  ← expect/actual (commonMain → androidMain/iosMain)
-│                     │
-│  1. Decode to Bitmap│
-│  2. Resize to 400x400
-│  3. Normalize [0,1] │
-│  4. TFLite inference│  ← GPU delegate (OpenGL / Metal)
-│  5. Denormalize     │
-│  6. Encode to JPEG  │
-└─────────┬───────────┘
-          │ ProcessingResult
-          ▼
-┌─────────────────────┐
-│  ResultScreen       │  ← Shared Compose UI
-│                     │
-│  ┌───────────────┐  │
-│  │  Enhanced Img  │  │  ← GestureDetector: onPress → show original
-│  │  (hold ↕ orig) │  │                    onRelease → show enhanced
-│  └───────────────┘  │
-│                     │
-│  [Back] [Save] [Share]
-└─────────────────────┘
+                          ┌─────────────────────────┐
+                          │    Camera / Gallery     │
+                          │  CameraX / UIImagePicker│
+                          └───────────┬─────────────┘
+                                      │ ByteArray
+                                      ▼
+┌──────────────────────────────────────────────────────────┐
+│                 ImageProcessor  (expect/actual)            │
+│                                                           │
+│   commonMain  :  interface ImageProcessor {               │
+│                      suspend fun process(bytes): Result   │
+│                  }                                        │
+│                                                           │
+│   ┌───────────────────── Android ──────────────────────┐  │
+│   │  AndroidImageProcessor                              │  │
+│   │  1. BitmapFactory.decodeByteArray()                 │  │
+│   │  2. Bitmap.createScaledBitmap()  →  400×400        │  │
+│   │  3. Normalize RGB to [0, 1]  (Float32)             │  │
+│   │  4. TFLite Interpreter.run()  ←  GpuDelegate       │  │
+│   │  5. De-normalize to [0, 255]  (Int)                │  │
+│   │  6. Bitmap.compress(JPEG)  →  ByteArray            │  │
+│   └────────────────────────────────────────────────────┘  │
+│                                                           │
+│   ┌────────────────────── iOS ─────────────────────────┐  │
+│   │  IosImageProcessor  (scaffold)                     │  │
+│   │  Uses TFLite C API via cinterop                    │  │
+│   └────────────────────────────────────────────────────┘  │
+└───────────────────────────┬──────────────────────────────┘
+                            │ ProcessingResult
+                            ▼
+┌──────────────────────────────────────────────────────────┐
+│                    ResultScreen  (commonMain)              │
+│                                                           │
+│   ┌────────────────────────────────────────────────────┐  │
+│   │                                                    │  │
+│   │               Enhanced Image                       │  │
+│   │   ┌──────────────────────────────────────────┐     │  │
+│   │   │  pointerInput(detectTapGestures)          │     │  │
+│   │   │  onPress   →  showOriginal = true         │     │  │
+│   │   │  onRelease →  showOriginal = false        │     │  │
+│   │   │  display = showOriginal ? orig : enhanced  │     │  │
+│   │   └──────────────────────────────────────────┘     │  │
+│   │                                                    │  │
+│   │         [✕]          [💾]          [↗]             │  │
+│   │        dismiss       save         share           │  │
+│   └────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Expect / Actual Pattern
+
+```
+                     commonMain/
+                      ImageProcessor.kt
+                     interface ImageProcessor
+                     ─────────────────
+                     suspend fun initialize()
+                     suspend fun process(bytes, w, h): Result
+                     fun release()
+                           │
+            ┌──────────────┴──────────────┐
+            │                             │
+   androidMain/                    iosMain/
+   ImageProcessor.android.kt       ImageProcessor.ios.kt
+   ───────────────────────         ──────────────────
+   class AndroidImageProcessor     class IosImageProcessor
+   : ImageProcessor {              : ImageProcessor {
+     TFLite Java API                 TFLite C API
+     GpuDelegate support             (scaffold)
+     CameraX integration             AVFoundation
+   }                               }
+```
+
+```
+                     CameraPreview
+                     ─────────────
+                     expect @Composable
+                     fun CameraPreview(...)
+                           │
+            ┌──────────────┴──────────────┐
+            │                             │
+   AndroidView                     UIViewRepresentable
+   (CameraX PreviewView)           (AVCaptureVideoPreviewLayer)
 ```
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Language** | Kotlin 2.0.21 |
-| **UI** | Compose Multiplatform 1.7.1 (Material3) |
-| **ML Runtime** | TensorFlow Lite 2.14.0 |
-| **GPU Compute** | GpuDelegate (Android) / Metal (iOS) |
-| **Camera (Android)** | CameraX 1.3.4 |
-| **Camera (iOS)** | AVFoundation (scaffold) |
-| **DI / State** | Compose state, no framework |
-| **Build** | Gradle 8.5 + AGP 8.2.2 |
+| Layer | Choice |
+|-------|--------|
+| Language | Kotlin 2.0.21 |
+| UI Framework | Compose Multiplatform 1.7.1 (Material3) |
+| ML Runtime | TensorFlow Lite 2.14.0 |
+| GPU Compute | GpuDelegate (Android) / Metal (iOS scaffold) |
+| Camera | CameraX 1.3.4 (Android) / AVFoundation (iOS scaffold) |
+| Image Picker | ActivityResultContracts (Android) / UIImagePicker (iOS scaffold) |
+| State Mgmt | Compose `mutableStateOf` |
+| Build | Gradle 8.5 + AGP 8.2.2 |
 
 ---
 
-## Getting Started
-
-### Prerequisites
-
-- **Android Studio** (or IntelliJ with KMP plugin)
-- **JDK 17+** (recommended: OpenJDK 21)
-- **Android SDK** (API 34)
-- **Xcode 16+** (for iOS, optional)
-
-### Clone & Build
+## Build & Run
 
 ```bash
-git clone <repo-url>
-cd localnightvision
-
-# Android
+# ── Android ──
 ./gradlew :composeApp:assembleDebug
 adb install -r composeApp/build/outputs/apk/debug/composeApp-debug.apk
 
-# iOS framework
+# ── iOS framework ──
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
-# Then open iosApp/iosApp.xcodeproj in Xcode and run
+# then open iosApp/iosApp.xcodeproj → Cmd+R
 ```
 
-### Run on device
+### Prerequisites
 
-```bash
-# Android
-./gradlew :composeApp:installDebug
-
-# iOS (after first framework link)
-# Open iosApp.xcodeproj → select simulator → Cmd+R
-```
+- JDK 17+ (recommended: OpenJDK 21)
+- Android SDK (API 34)
+- Xcode 16+ (iOS only)
 
 ---
 
 ## Model
 
-The app bundles **MIRNet-Fixed (integer quantized)** from TensorFlow Hub:
-
-- **Input:** `[1, 400, 400, 3]` float32 (resized, normalized)
-- **Output:** `[1, 400, 400, 3]` float32 (denormalized to 0–255)
-- **Format:** Full-integer quantized TFLite (~39 MB)
-- **Source:** `sayakpaul/lite-model/mirnet-fixed/dr/1`
-
-The model is loaded from Android assets via `AssetFileDescriptor` → `FileChannel.map()` for zero-copy mmap loading.
-
----
-
-## Project Status
-
-- ✅ **Android:** Fully functional — camera, picker, ML inference, touch-to-compare
-- ⚠️ **iOS:** Scaffold complete — requires AVFoundation camera + TFLite C interop implementations
-- 📝 **Pending:** Save-to-gallery, share sheet, EXIF orientation handling, model download fallback
+| Property | Value |
+|----------|-------|
+| Architecture | MIRNet-Fixed (integer quantized) |
+| Input shape | `[1, 400, 400, 3]` float32 |
+| Output shape | `[1, 400, 400, 3]` float32 |
+| File size | ~39 MB |
+| Source | TensorFlow Hub: `sayakpaul/lite-model/mirnet-fixed/dr/1` |
+| Loading | `AssetFileDescriptor` → `FileChannel.map()` (zero-copy mmap) |
 
 ---
 
-## License
+## Status
 
-```
-MIT License
-
-Copyright (c) 2024
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files...
-```
+- ✅ **Android:** Camera, image picker, TFLite ML inference, touch-to-compare — fully functional
+- ⚠️ **iOS:** Architecture fully wired up — needs AVFoundation + TFLite C interop implementations
+- 📝 **Pending:** Save to gallery, share sheet, EXIF orientation correction
