@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Night Vision — On-Device Low-Light Enhancement</title>
+    <style>
+        :root {
+            --bg: #0f0f13;
+            --surface: #1a1a24;
+            --primary: #6C63FF;
+            --text: #e4e4ec;
+            --muted: #8888a0;
+            --border: #2a2a3a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+        header { text-align: center; padding: 60px 0 40px; }
+        header h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #6C63FF, #03DAC6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        header p { color: var(--muted); margin-top: 12px; font-size: 1.1rem; }
+        .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+        .badge { background: var(--surface); border: 1px solid var(--border); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; color: var(--muted); }
+        .badge.primary { border-color: var(--primary); color: var(--primary); }
+        section { margin-top: 48px; }
+        h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; color: #fff; }
+        h2::before { content: '# '; color: var(--primary); }
+        h3 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 8px; color: var(--text); }
+        p, li { color: var(--muted); }
+        a { color: var(--primary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        pre {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #c4c4d0;
+            margin: 12px 0;
+        }
+        code { font-family: 'JetBrains Mono', 'SF Mono', monospace; }
+        .tree { padding-left: 20px; border-left: 2px solid var(--border); margin: 12px 0; }
+        .tree div { position: relative; padding-left: 20px; }
+        .tree div::before { content: ''; position: absolute; left: 0; top: 0; bottom: 50%; width: 10px; border-left: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .tree div:last-child::before { bottom: auto; height: 50%; }
+        ul { padding-left: 20px; }
+        li { margin: 4px 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+        .card h4 { font-size: 0.9rem; color: var(--primary); margin-bottom: 4px; }
+        .card p { font-size: 0.85rem; }
+        footer { text-align: center; padding: 40px 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 60px; }
+        .flow { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+        .flow-step { background: var(--surface); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; }
+        .flow-arrow { color: var(--muted); font-size: 1.2rem; }
+        @media (max-width: 600px) { header h1 { font-size: 1.8rem; } .flow { flex-direction: column; } .flow-arrow { transform: rotate(90deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Local Night Vision</h1>
+            <p>On-device low-light image enhancement for Android &amp; iOS</p>
+            <div class="badges">
+                <span class="badge primary">Kotlin Multiplatform</span>
+                <span class="badge primary">Compose Multiplatform</span>
+                <span class="badge">TensorFlow Lite</span>
+                <span class="badge">MIRNet</span>
+                <span class="badge">CameraX</span>
+                <span class="badge">iOS (WIP)</span>
+            </div>
+        </header>
+
+        <section>
+            <h2>Overview</h2>
+            <p>Local Night Vision brings <strong>MIRNet</strong> — a state-of-the-art deep learning architecture for low-light image enhancement — directly to mobile devices. All processing happens <strong>on-device</strong> via TensorFlow Lite with GPU acceleration. No data ever leaves your phone.</p>
+            <p>The app provides a live camera viewfinder, gallery image picker, and a touch-to-compare result viewer that lets you hold to see the original versus the enhanced version.</p>
+        </section>
+
+        <section>
+            <h2>Research Paper</h2>
+            <blockquote>
+                <p><strong>MIRNet: Learning Enriched Features for Real Image Restoration and Enhancement</strong><br>
+                <em>Syed Waqas Zamir, Aditya Arora, Salman Khan, Munawar Hayat, Fahad Shahbaz Khan, Ming-Hsuan Yang, Ling Shao</em><br>
+                <a href="https://arxiv.org/pdf/2003.06792v2.pdf">arXiv:2003.06792v2</a></p>
+            </blockquote>
+            <p>MIRNet introduces a multi-scale residual block that maintains spatially-precise high-resolution representations while receiving rich contextual information from low-resolutions. The architecture achieves state-of-the-art results on low-light enhancement, image denoising, and super-resolution.</p>
+        </section>
+
+        <section>
+            <h2>Architecture</h2>
+            <pre>localnightvision/
+├── composeApp/
+│   ├── src/commonMain/          ← Shared Compose UI + expect interfaces
+│   │   └── kotlin/.../
+│   │       ├── App.kt           ← Root composable
+│   │       ├── CameraScreen.kt  ← Camera + picker UI
+│   │       ├── ResultScreen.kt  ← Touch-to-compare viewer
+│   │       ├── model/           ← Data models
+│   │       └── platform/        ← expect declarations
+│   ├── src/androidMain/         ← Android actuals + entry point
+│   │   ├── kotlin/.../
+│   │   │   ├── CameraPreview.android.kt  ← CameraX
+│   │   │   └── platform/
+│   │   │       └── ImageProcessor.android.kt  ← TFLite
+│   │   ├── assets/model/        ← MIRNet .tflite (~39 MB)
+│   │   └── res/                 ← Android resources
+│   └── src/iosMain/             ← iOS actuals + entry point
+│       └── kotlin/.../
+│           ├── CameraPreview.ios.kt  ← AVFoundation scaffold
+│           └── platform/
+│               └── ImageProcessor.ios.kt  ← TFLite C scaffold
+├── iosApp/                      ← iOS Xcode project
+│   └── iosApp/
+│       ├── iOSApp.swift
+│       └── ContentView.swift    ← Compose ↔ SwiftUI bridge
+├── gradle/libs.versions.toml    ← Version catalog
+├── docs/index.html              ← This page
+└── README.md</pre>
+        </section>
+
+        <section>
+            <h2>Data Flow</h2>
+            <div class="flow">
+                <span class="flow-step">Camera / Gallery</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">ByteArray</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Decode + Resize (400×400)</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Normalize [0,1]</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">TFLite Inference</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Denormalize</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Result JPEG</span>
+            </div>
+            <h3>Expect / Actual Pattern</h3>
+            <pre>commonMain/platform/ImageProcessor.kt
+    interface ImageProcessor {
+        suspend fun initialize()
+        suspend fun process(inputBytes, width, height): ProcessingResult
+    }
+
+androidMain/.../ImageProcessor.android.kt
+    class AndroidImageProcessor : ImageProcessor {
+        // Uses TFLite Interpreter + GpuDelegate
+        // Model loaded via AssetFileDescriptor mmap
+    }
+
+iosMain/.../ImageProcessor.ios.kt
+    class IosImageProcessor : ImageProcessor {
+        // Uses TFLite C API via cinterop (scaffold)
+    }</pre>
+        </section>
+
+        <section>
+            <h2>Platform Modules</h2>
+            <div class="grid">
+                <div class="card">
+                    <h4>Camera</h4>
+                    <p>Android: CameraX PreviewView + ImageCapture. iOS: AVFoundation (scaffold).</p>
+                </div>
+                <div class="card">
+                    <h4>Image Picker</h4>
+                    <p>Android: ActivityResultContracts.GetContent. iOS: UIImagePicker (scaffold).</p>
+                </div>
+                <div class="card">
+                    <h4>ML Inference</h4>
+                    <p>Android: TFLite Java API + GPU delegate. iOS: TFLite C API (scaffold).</p>
+                </div>
+                <div class="card">
+                    <h4>Permissions</h4>
+                    <p>Android: ActivityResultContracts.RequestPermission. iOS: AVFoundation auto-prompt.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Key Features</h2>
+            <ul>
+                <li><strong>Touch-to-compare</strong> — Hold finger on the result to see the original; release to see the enhanced version. Built with Compose's <code>pointerInput</code> + <code>detectTapGestures(onPress)</code>.</li>
+                <li><strong>GPU-accelerated inference</strong> — On Android, uses <code>GpuDelegate</code> via <code>CompatibilityList</code> to determine device support at runtime, falling back to CPU if unavailable.</li>
+                <li><strong>Zero-copy model loading</strong> — The 39 MB TFLite model is loaded via Android's <code>AssetFileDescriptor</code> + <code>FileChannel.map()</code> for direct mmap access without copying into heap.</li>
+                <li><strong>Modular architecture</strong> — Clean separation between UI (commonMain), platform services (androidMain/iosMain), and business logic (commonMain/domain).</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Building</h2>
+            <h3>Prerequisites</h3>
+            <ul>
+                <li>JDK 17+ (recommended: OpenJDK 21)</li>
+                <li>Android SDK (API 34)</li>
+                <li>Xcode 16+ (iOS only)</li>
+            </ul>
+            <h3>Android</h3>
+            <pre>./gradlew :composeApp:assembleDebug
+adb install -r composeApp/build/outputs/apk/debug/composeApp-debug.apk</pre>
+            <h3>iOS Framework</h3>
+            <pre>./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+open iosApp/iosApp.xcodeproj  # then Cmd+R in Xcode</pre>
+        </section>
+
+        <section>
+            <h2>Dependencies</h2>
+            <ul>
+                <li>Kotlin 2.0.21 + Compose Multiplatform 1.7.1</li>
+                <li>TensorFlow Lite 2.14.0 + GPU delegate</li>
+                <li>CameraX 1.3.4 (Android)</li>
+                <li>AndroidX Activity Compose + Lifecycle</li>
+                <li>Kotlinx Coroutines 1.9.0</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Status</h2>
+            <ul>
+                <li>✅ Android: Camera, Gallery Picker, ML Inference, Touch-to-Compare — fully functional</li>
+                <li>⚠️ iOS: Architecture scaffolded — needs AVFoundation camera + TFLite C interop implementations</li>
+                <li>📝 Pending: Save-to-gallery, share sheet, EXIF orientation correction, model download fallback</li>
+            </ul>
+        </section>
+
+        <footer>
+            Built with Kotlin Multiplatform + Compose Multiplatform
+        </footer>
+    </div>
+</body>
+</html>
